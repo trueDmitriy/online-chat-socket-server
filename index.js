@@ -54,17 +54,18 @@ io.on("connection", (socket) => {
 
   // listen for sendMessage event
   socket.on("sendMessage", ({ message, username, room }) => {
-    const user = findUser(username, room);
+    if (!message || !username || !room) return;
 
-    if (user) {
-      io.to(user.room).emit("message", {
-        data: { user: { name: user.username }, text: message },
-      });
+    const { user } = addUser({ username, room });
+    socket.join(user.room);
 
-      io.to(room).emit("roomData", {
-        data: { users: getRoomUsers(room) },
-      });
-    }
+    io.to(user.room).emit("message", {
+      data: { user: { name: user.username }, text: message },
+    });
+
+    io.to(user.room).emit("roomData", {
+      data: { users: getRoomUsers(user.room) },
+    });
   });
 
   // listen for leftRoom event
@@ -72,6 +73,12 @@ io.on("connection", (socket) => {
     const user = removeUser(username, room);
 
     if (user) {
+      socket.leave(user.room);
+
+      io.to(user.room).emit("roomData", {
+        data: { users: getRoomUsers(user.room) },
+      });
+
       io.to(user.room).emit("message", {
         data: {
           user: { name: "Admin" },

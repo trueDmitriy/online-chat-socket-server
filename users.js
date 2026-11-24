@@ -28,7 +28,8 @@ const removeUser = (username, room) => {
 
   if (user) {
     users = users.filter(
-      (u) => u.username !== user.username && u.room === user.room,
+      (u) =>
+        (u.room === user.room && u.name !== user.name) || u.room !== user.room,
     );
   }
 
@@ -36,7 +37,7 @@ const removeUser = (username, room) => {
 };
 
 const getRoomUsers = (room) => {
-  return users.filter((u) => u.room === room);
+  return users.filter((u) => normalize(u.room) === normalize(room));
 };
 
 module.exports = { addUser, findUser, getRoomUsers, removeUser };
